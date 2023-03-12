@@ -6,6 +6,12 @@
 # ub, a sufficiently large number for linearization transformation
 # cutoff, minimal average relative abundance of the group to  avoid generating an empty group or a group with all taxa that are numerically stable but ecologically trivial (only required for a uniform phenotypic variable) 
 
+M<-Microbiome
+y<-trait_d
+ub<-100
+n<-ncol(M)
+cutoff<-0
+
 diagM<-function(x,N){
 	dm<-matrix(0,nrow=N,ncol=N)
 	diag(dm)<-x
@@ -14,7 +20,7 @@ diagM<-function(x,N){
 
 # uniform variable
 M0<-M
-e<-as.matrix(rep(1,r),ncol=1)
+e<-as.matrix(rep(1,nrow(M0)),ncol=1)
 P<-t(M0) %*% M0 - ((2/n) * (t(M0) %*% e %*% t(e) %*% M0)) + ((1/(n^2)) * (t(M0) %*% e %*% t(e) %*% e %*% t(e) %*% M0))
 Q<-((1/(n^2)) * t(M0) %*% e %*% t(e) %*% M0)
 
@@ -36,7 +42,7 @@ Q<-t(M0) %*% y0 %*% L %*% L %*% t(y0) %*% M0
 m1<-max(rowSums(abs(P)))
 m2<-max(rowSums(abs(Q)))
 
-A<-matrix(0,nrow=(cs*n)+4,ncol=(6*n)+1)
+A<-matrix(0,nrow=(9*n)+4,ncol=(6*n)+1)
 
 A[1:n,1:n] = diagM(1,n)
 A[1:n,(n+1):(2*n)] = diagM(1,n)
@@ -84,7 +90,6 @@ L<-rep(0,(6*n)+1)
 L[(n+1):(2*n)] = 1
 L[((4*n)+1):(5*n)] = -m1 
 
-
 model<-list()
 model$obj<-L
 model$A<-A
@@ -99,5 +104,11 @@ model$lb<-0
 model$vtype<-rep("C",ncol(A))
 model$vtype[((5*n)+1):(6*n)]<-"B"
 
-gurobi::gurobi(model)
+out<-gurobi::gurobi(model)
+out$x[(5*n+1):(length(out$x)-1)] # final group selected
+
+test<-replicate(10,rlnorm(12,0,1))
+test.norm<-t(apply(test,1,function(x){x/sum(x)}))
+
+y<-rowSums(test.norm[,c(1,2,4)])
 
