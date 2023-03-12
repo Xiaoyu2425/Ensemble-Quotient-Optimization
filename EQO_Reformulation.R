@@ -7,7 +7,7 @@
 # cutoff, minimal average relative abundance of the group to  avoid generating an empty group or a group with all taxa that are numerically stable but ecologically trivial (only required for a uniform phenotypic variable) 
 
 M<-Microbiome
-y<-trait_d
+y<-trait
 ub<-100
 n<-ncol(M)
 cutoff<-0
@@ -107,8 +107,4 @@ model$vtype[((5*n)+1):(6*n)]<-"B"
 out<-gurobi::gurobi(model)
 out$x[(5*n+1):(length(out$x)-1)] # final group selected
 
-test<-replicate(10,rlnorm(12,0,1))
-test.norm<-t(apply(test,1,function(x){x/sum(x)}))
-
-y<-rowSums(test.norm[,c(1,2,4)])
 
